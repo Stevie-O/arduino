@@ -1,8 +1,8 @@
 const int SWITCH_BUTTON_PIN = 2;
-const int TEST_BUTTON_PIN = 11;
+const int TEST_BUTTON_PIN = 12;
 
 const int FIRST_SEG_PIN = 4;
-const int LAST_SEG_PIN = 10;
+const int LAST_SEG_PIN = 11;
 #define SEG_PIN_BIT(pin) ((pin) - FIRST_SEG_PIN)
 #define SEG_PIN_MASK(pin) (1 << SEG_PIN_BIT(pin))
 const int SEG_A_PIN = 4; // Top
@@ -12,6 +12,7 @@ const int SEG_D_PIN = 10; // Bottom
 const int SEG_E_PIN = 9; // Lower Left
 const int SEG_F_PIN = 7; // Upper Left
 const int SEG_G_PIN = 8; // Center
+const int SEG_DOT_PIN = 11; // Dot
 #define SEG_A SEG_PIN_MASK(SEG_A_PIN)
 #define SEG_B SEG_PIN_MASK(SEG_B_PIN)
 #define SEG_C SEG_PIN_MASK(SEG_C_PIN)
@@ -19,6 +20,7 @@ const int SEG_G_PIN = 8; // Center
 #define SEG_E SEG_PIN_MASK(SEG_E_PIN)
 #define SEG_F SEG_PIN_MASK(SEG_F_PIN)
 #define SEG_G SEG_PIN_MASK(SEG_G_PIN)
+#define SEG_DOT SEG_PIN_MASK(SEG_DOT_PIN)
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
@@ -79,7 +81,8 @@ void test_segments() {
 void loop() {
    // blinking_8();
    //test_segments();
-   count_up();
+   //count_up();
+   starphox();
 }
 
 void set_display(byte bits) {
@@ -97,3 +100,32 @@ void count_up() {
     counter_digit = 0;
   delay(500);
 }
+
+const byte phox[] = {
+    SEG_A|SEG_F|SEG_B|SEG_G|SEG_E,
+//    SEG_F|SEG_B|SEG_C,
+    SEG_F|SEG_E|SEG_G|SEG_C,
+//    SEG_E|SEG_C,
+    SEG_E|SEG_G|SEG_C|SEG_D,
+//    SEG_E,
+    SEG_G|SEG_D|SEG_C,
+//    SEG_G|SEG_D|SEG_E,
+//    SEG_G|SEG_B|SEG_C,        // first half of 't'
+    SEG_G|SEG_F|SEG_E|SEG_D,  // second half of 't'
+//    SEG_C,
+    SEG_C|SEG_E|SEG_G|SEG_D|SEG_DOT, // 'a'
+//    SEG_E|SEG_C,
+    SEG_E|SEG_G|SEG_C,
+//    SEG_E|SEG_B|SEG_C,
+    SEG_E|SEG_F|SEG_G|SEG_A|SEG_D,
+    0,
+};
+
+int phox_idx = 0;
+void starphox() {
+  set_display(phox[phox_idx]);
+  if (++phox_idx >= ARRAY_SIZE(phox))
+    phox_idx = 0;
+  delay(500);
+}
+
