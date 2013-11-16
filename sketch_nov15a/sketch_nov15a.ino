@@ -1,23 +1,60 @@
-const int BUTTON_PIN = 11;
+const int SWITCH_BUTTON_PIN = 2;
+const int TEST_BUTTON_PIN = 11;
 
+const int FIRST_SEG_PIN = 4;
+const int LAST_SEG_PIN = 10;
+#define SEG_PIN_BIT(pin) ((pin) - FIRST_SEG_PIN)
+#define SEG_PIN_MASK(pin) (1 << SEG_PIN_BIT(pin))
+const int SEG_A_PIN = 4; // Top
+const int SEG_B_PIN = 5; // Upper Right
+const int SEG_C_PIN = 6; // Lower Right
+const int SEG_D_PIN = 10; // Bottom
+const int SEG_E_PIN = 9; // Lower Left
+const int SEG_F_PIN = 7; // Upper Left
+const int SEG_G_PIN = 8; // Center
+#define SEG_A SEG_PIN_MASK(SEG_A_PIN)
+#define SEG_B SEG_PIN_MASK(SEG_B_PIN)
+#define SEG_C SEG_PIN_MASK(SEG_C_PIN)
+#define SEG_D SEG_PIN_MASK(SEG_D_PIN)
+#define SEG_E SEG_PIN_MASK(SEG_E_PIN)
+#define SEG_F SEG_PIN_MASK(SEG_F_PIN)
+#define SEG_G SEG_PIN_MASK(SEG_G_PIN)
+
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+
+const byte digits[10] = {
+    SEG_A|SEG_B|SEG_C|SEG_D|SEG_E|SEG_F,  // 0
+    SEG_B|SEG_C, // 1
+    SEG_A|SEG_B|SEG_G|SEG_E|SEG_D, // 2
+    SEG_A|SEG_B|SEG_G|SEG_C|SEG_D, // 3
+    SEG_F|SEG_B|SEG_G|SEG_C, // 4
+    SEG_A|SEG_F|SEG_G|SEG_C|SEG_D, // 5
+    SEG_A|SEG_F|SEG_G|SEG_E|SEG_C|SEG_D, // 6
+    SEG_A|SEG_B|SEG_C, // 7
+    SEG_A|SEG_B|SEG_C|SEG_D|SEG_E|SEG_F|SEG_G, // 8,    
+    SEG_A|SEG_B|SEG_C|SEG_D|SEG_F|SEG_G, // 9,    
+};
+    
+    
+    
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting up...");
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(TEST_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_BUTTON_PIN, INPUT_PULLUP);
   int pin;
-  for (pin = 4; pin <= 10; pin++) {
+  for (pin = FIRST_SEG_PIN; pin <= LAST_SEG_PIN; pin++) {
     pinMode(pin, OUTPUT);
     digitalWrite(pin, HIGH);
   }
 }
 
 
-
 int blinkstate = LOW;
 
 void blinking_8() {
   int pin;
-  for (pin = 4; pin <= 10; pin++) {
+  for (pin = FIRST_SEG_PIN; pin <= LAST_SEG_PIN; pin++) {
     digitalWrite(pin, blinkstate);
   }
   blinkstate ^= LOW ^ HIGH;
@@ -31,9 +68,9 @@ void test_segments() {
   // turn on the segment
   digitalWrite(test_pin, LOW);
   // now wait for LOW (button press)
-  while(digitalRead(BUTTON_PIN) == HIGH) delay(1);
+  while(digitalRead(TEST_BUTTON_PIN) == HIGH) delay(1);
   // mow wait for HIGH (button releas)
-  while (digitalRead(BUTTON_PIN) == LOW) delay(1);
+  while (digitalRead(TEST_BUTTON_PIN) == LOW) delay(1);
   // turn off the segment
   digitalWrite(test_pin, HIGH);
   if (++test_pin > 10) test_pin = 4;
@@ -41,5 +78,22 @@ void test_segments() {
 
 void loop() {
    // blinking_8();
-   test_segments();
+   //test_segments();
+   count_up();
+}
+
+void set_display(byte bits) {
+  int pin;
+  for (pin = FIRST_SEG_PIN; pin <= LAST_SEG_PIN; pin++)
+  {
+    digitalWrite(pin, (bits & SEG_PIN_MASK(pin)) ? LOW : HIGH);
+  }
+}
+
+int counter_digit = 0;
+void count_up() {
+  set_display(digits[counter_digit]);
+  if (++counter_digit >= ARRAY_SIZE(digits))
+    counter_digit = 0;
+  delay(500);
 }
