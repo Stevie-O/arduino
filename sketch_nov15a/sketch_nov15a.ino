@@ -53,10 +53,32 @@ void setup() {
   }
 }
 
+typedef void(*loopfunc_t)();
+
+const loopfunc_t loop_function_list[] = {
+    blinking_8,
+    test_segments,    
+    count_up,
+    count_down,
+    phoxtane,
+};
+
+volatile byte cur_loop_function = 0;
+volatile byte abort_func = 0;
+
 void switcheroo() {
   Serial.println("switcheroo!");
+  abort_func = 1;
+  if (++cur_loop_function >= ARRAY_SIZE(loop_function_list))
+    cur_loop_function = 0;
 }
 
+byte abortable_delay(int ms) {
+  int i;
+  for (i = 0; i < ms && abort_func == 0; i++)
+    delay(1);
+ return abort_func;
+}
 
 int blinkstate = LOW;
 
@@ -76,19 +98,24 @@ void test_segments() {
   // turn on the segment
   digitalWrite(test_pin, LOW);
   // now wait for LOW (button press)
-  while(digitalRead(TEST_BUTTON_PIN) == HIGH) delay(1);
+  while(digitalRead(TEST_BUTTON_PIN) == HIGH) 
+    if(abortable_delay(1)) return;
+  
   // mow wait for HIGH (button releas)
-  while (digitalRead(TEST_BUTTON_PIN) == LOW) delay(1);
+  while (digitalRead(TEST_BUTTON_PIN) == LOW) 
+    if (abortable_delay(1)) return; 
   // turn off the segment
   digitalWrite(test_pin, HIGH);
   if (++test_pin > 10) test_pin = 4;
 }
 
 void loop() {
+  abort_func = 0;
    // blinking_8();
    //test_segments();
    //count_up();
-   phoxtane();
+   //phoxtane();
+   loop_function_list[cur_loop_function]();
 }
 
 void set_display(byte bits) {
@@ -104,7 +131,14 @@ void count_up() {
   set_display(digits[counter_digit]);
   if (++counter_digit >= ARRAY_SIZE(digits))
     counter_digit = 0;
-  delay(500);
+  abortable_delay(500);
+}
+
+void count_down() {
+  set_display(digits[counter_digit]);
+  if (counter_digit == 0) counter_digit = ARRAY_SIZE(digits);
+  counter_digit--;
+  abortable_delay(500);
 }
 
 const byte phox[] = {
@@ -132,6 +166,6 @@ void phoxtane() {
   set_display(phox[phox_idx]);
   if (++phox_idx >= ARRAY_SIZE(phox))
     phox_idx = 0;
-  delay(500);
+  abortable_delay(500);
 }
 
