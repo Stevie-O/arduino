@@ -1,4 +1,5 @@
 const int SWITCH_BUTTON_PIN = 2;
+const int SWITCH_BUTTON_INT = 0;
 const int TEST_BUTTON_PIN = 12;
 
 const int FIRST_SEG_PIN = 4;
@@ -44,11 +45,16 @@ void setup() {
   Serial.println("Starting up...");
   pinMode(TEST_BUTTON_PIN, INPUT_PULLUP);
   pinMode(SWITCH_BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(SWITCH_BUTTON_INT, switcheroo, FALLING);
   int pin;
   for (pin = FIRST_SEG_PIN; pin <= LAST_SEG_PIN; pin++) {
     pinMode(pin, OUTPUT);
     digitalWrite(pin, HIGH);
   }
+}
+
+void switcheroo() {
+  Serial.println("switcheroo!");
 }
 
 
@@ -82,7 +88,7 @@ void loop() {
    // blinking_8();
    //test_segments();
    //count_up();
-   starphox();
+   phoxtane();
 }
 
 void set_display(byte bits) {
@@ -122,7 +128,7 @@ const byte phox[] = {
 };
 
 int phox_idx = 0;
-void starphox() {
+void phoxtane() {
   set_display(phox[phox_idx]);
   if (++phox_idx >= ARRAY_SIZE(phox))
     phox_idx = 0;
